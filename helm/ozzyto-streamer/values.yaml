@@ -1,0 +1,58 @@
+# Default values for ozzyto-streamer
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/your-username/ozzyto-streamer
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+# Specify the architecture to use
+architecture: "arm/v7"  # Options: "amd64", "arm/v7", "arm64"
+
+# Video device configuration
+videoDevice:
+  # Path to the video device on the host
+  path: "/dev/video0"
+  # Whether to enable device mounting
+  enabled: true
+
+# Host device directory configuration
+hostDevices:
+  # Whether to mount the entire /dev directory from host
+  enabled: true
+  # Path to the devices directory on host
+  path: "/dev"
+  # Path where to mount inside the container
+  mountPath: "/dev"
+
+# Stream configuration
+stream:
+  width: 1280
+  height: 720
+  framerate: 30
+  path: "live/stream"
+
+# RTMP server configuration
+rtmpServer:
+  host: "rtmp-server"
+  port: 1935
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+securityContext:
+  privileged: true  # Needed for accessing hardware devices

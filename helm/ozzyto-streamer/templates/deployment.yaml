@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ozzyto-streamer.fullname" . }}
+  labels:
+    {{- include "ozzyto-streamer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ozzyto-streamer.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: Recreate  # We want to avoid multiple pods trying to access the same video device
+  template:
+    metadata:
+      labels:
+        {{- include "ozzyto-streamer.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NGINX_RTMP_HOST
+              value: "{{ .Values.rtmpServer.host }}"
+            - name: STREAM_WIDTH
+              value: "{{ .Values.stream.width }}"
+            - name: STREAM_HEIGHT
+              value: "{{ .Values.stream.height }}"
+            - name: STREAM_FRAMERATE
+              value: "{{ .Values.stream.framerate }}"
+            - name: STREAM_PATH
+              value: "{{ .Values.stream.path }}"
+            {{- if .Values.videoDevice.enabled }}
+            - name: VIDEO_DEVICE
+              value: "{{ .Values.videoDevice.path }}"
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.hostDevices.enabled }}
+            - name: host-dev
+              mountPath: "{{ .Values.hostDevices.mountPath }}"
+            {{- else if .Values.videoDevice.enabled }}
+            - name: video-device
+              mountPath: "{{ .Values.videoDevice.path }}"
+            {{- end }}
+      volumes:
+        {{- if .Values.hostDevices.enabled }}
+        - name: host-dev
+          hostPath:
+            path: "{{ .Values.hostDevices.path }}"
+            type: Directory
+        {{- else if .Values.videoDevice.enabled }}
+        - name: video-device
+          hostPath:
+            path: "{{ .Values.videoDevice.path }}"
+            type: CharDevice
+        {{- end }}
