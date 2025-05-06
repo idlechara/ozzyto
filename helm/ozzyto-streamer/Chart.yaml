@@ -1,5 +1,5 @@
 apiVersion: v2
-name: ozzyto-streamer
+name: ozzyto-stream-chart
 description: A Helm chart for Kubernetes to deploy the ozzyto streaming service
 type: application
 version: 0.1.0
