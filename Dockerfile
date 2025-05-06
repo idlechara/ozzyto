@@ -18,6 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
     procps \
     v4l-utils \
+    git \
+    cmake \
+    meson \
+    build-essential \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,27 +29,63 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN case "${TARGETARCH}${TARGETVARIANT}" in \
       "armv7") \
         apt-get update && \
-        apt-get install -y --no-install-recommends gnupg && \
+        apt-get install -y --no-install-recommends gnupg \
+          libboost-program-options-dev \
+          libdrm-dev \
+          libexif-dev \
+          libavcodec-extra \
+          libavcodec-dev \
+          libavdevice-dev \
+          libpng-dev \
+          libpng-tools \
+          libepoxy-dev \
+          qt5-qmake \
+          qtmultimedia5-dev && \
         echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list && \
         apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E && \
         apt-get update && \
         apt-get install -y --no-install-recommends \
-          libcamera-apps \
-          rpicam-apps \
-          && apt-get clean \
-          && rm -rf /var/lib/apt/lists/* \
+          libcamera-apps && \
+        # Build rpicam-apps from source
+        git clone https://github.com/raspberrypi/rpicam-apps.git && \
+        cd rpicam-apps/ && \
+        meson setup build -Denable_libav=enabled -Denable_drm=enabled -Denable_egl=enabled -Denable_qt=enabled -Denable_opencv=disabled -Denable_tflite=disabled -Denable_hailo=disabled && \
+        meson compile -C build && \
+        meson install -C build && \
+        cd .. && \
+        rm -rf rpicam-apps && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/* \
         ;; \
       "arm64") \
         apt-get update && \
-        apt-get install -y --no-install-recommends gnupg && \
+        apt-get install -y --no-install-recommends gnupg \
+          libboost-program-options-dev \
+          libdrm-dev \
+          libexif-dev \
+          libavcodec-extra \
+          libavcodec-dev \
+          libavdevice-dev \
+          libpng-dev \
+          libpng-tools \
+          libepoxy-dev \
+          qt5-qmake \
+          qtmultimedia5-dev && \
         echo "deb http://archive.raspberrypi.org/debian/ bookworm main" > /etc/apt/sources.list.d/raspi.list && \
         apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 82B129927FA3303E && \
         apt-get update && \
         apt-get install -y --no-install-recommends \
-          libcamera-apps \
-          rpicam-apps \
-          && apt-get clean \
-          && rm -rf /var/lib/apt/lists/* \
+          libcamera-apps && \
+        # Build rpicam-apps from source
+        git clone https://github.com/raspberrypi/rpicam-apps.git && \
+        cd rpicam-apps/ && \
+        meson setup build -Denable_libav=enabled -Denable_drm=enabled -Denable_egl=enabled -Denable_qt=enabled -Denable_opencv=disabled -Denable_tflite=disabled -Denable_hailo=disabled && \
+        meson compile -C build && \
+        meson install -C build && \
+        cd .. && \
+        rm -rf rpicam-apps && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/* \
         ;; \
       *) \
         echo "Standard build for ${TARGETARCH}${TARGETVARIANT}" \
